@@ -17,4 +17,4 @@ jobs:
       - name: Run Tests in Container
         # On lance un conteneur qui exécute la commande de test Maven à l'intérieur
         # --rm : supprime le conteneur une fois fini pour gagner de la place
-        run: docker run --rm jpetstore ./mvnw test -B -D"license.skip=true"
+        run: docker run --rm --user jpetuser jpetstore ./mvnw test -B -D"license.skip=true"
