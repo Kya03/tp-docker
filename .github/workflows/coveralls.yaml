@@ -18,8 +18,7 @@ jobs:
           
       - name: Copy Report from Container
         # On extrait le fichier jacoco.xml du conteneur vers la machine GitHub
-        run: docker cp reporter:/app/target/site/jacoco/jacoco.xml ./jacoco.xml
-
+        run: docker cp reporter:/usr/src/myapp/target/site/jacoco/jacoco.xml ./jacoco.xml
       - name: Send to Coveralls
         # On utilise l'action officielle pour envoyer le fichier extrait
         uses: coverallsapp/github-action@v2
