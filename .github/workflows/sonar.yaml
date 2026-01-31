@@ -3,41 +3,42 @@ name: SonarCloud with Docker
 on:
   push:
     branches:
-      - master # S'exécute uniquement lors d'une mise à jour de la branche principale
+      - master
+      - ndack  # <--- AJOUTE TA BRANCHE ICI pour tester tout de suite
 
 jobs:
   build:
-    # IMPORTANT : Remplace 'mybatis' par ton propre nom d'utilisateur GitHub
     if: github.repository_owner == 'kya03' 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Récupère tout l'historique pour que Sonar puisse voir qui a écrit quelle ligne
+          fetch-depth: 0 
 
       - name: Build and Test in Docker
-        # On lance les tests dans Docker pour générer le rapport Jacoco
         run: |
           docker build -t jpetstore-sonar .
+          # Utilisation du nom du conteneur pour l'extraction
           docker run --name sonar-reporter jpetstore-sonar ./mvnw verify jacoco:report -Dlicense.skip=true
-          docker cp sonar-reporter:/app/target/site/jacoco/jacoco.xml ./jacoco.xml
+          
+      - name: Copy Report from Container
+        # CORRECTION DU CHEMIN ICI
+        run: docker cp sonar-reporter:/usr/src/myapp/target/site/jacoco/jacoco.xml ./jacoco.xml
 
       - name: Set up JDK 17
-        # SonarCloud a besoin de Java pour envoyer les résultats, même si le build est fait en Docker
         uses: actions/setup-java@v3
         with:
           java-version: 17
           distribution: zulu
 
       - name: Analyze with SonarCloud
-        # On envoie le rapport extrait de Docker vers SonarCloud
-        run: >
-          - name: Analyze with SonarCloud
-          ./mvnw sonar:sonar 
-          -Dsonar.projectKey=kya03_tp-docker  # <--- METS BIEN LE NOM VU SUR SONAR
-          -Dsonar.organization=kya03          # <--- TON NOM D'UTILISATEUR
-          -Dsonar.host.url=https://sonarcloud.io 
-          -Dsonar.login=$SONAR_TOKEN 
+        # CORRECTION DE LA SYNTAXE (On enlève les tirets inutiles dans le 'run')
+        run: |
+          ./mvnw sonar:sonar \
+          -Dsonar.projectKey=kya03_tp-docker \
+          -Dsonar.organization=kya03 \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
           -Dsonar.coverage.jacoco.xmlReportPaths=./jacoco.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
