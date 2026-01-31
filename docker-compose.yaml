@@ -14,7 +14,7 @@
 #    limitations under the License.
 #
 
-version: "3.9"
+# On retire la ligne 'version' car elle est obsolète et génère des warnings
 
 services:
   jpetstore:
@@ -22,5 +22,23 @@ services:
     build:
       context: .
     ports:
-      - 8080:8080
+      - "8080:8080"
+    
+    # 1. Limitation des ressources (Protection contre les attaques DoS)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    
+    # 2. Isolation réseau (Segmentation)
+    networks:
+      - jpet-network
+
+    # On garde restart: always mais on surveillera les logs
     restart: always
+
+# Définition du réseau privé
+networks:
+  jpet-network:
+    driver: bridge
