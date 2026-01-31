@@ -17,24 +17,20 @@
 
 FROM openjdk:17.0.2
 
-# Création du dossier de travail
 WORKDIR /usr/src/myapp
 
-# SÉCURITÉ : Création d'un utilisateur sans mot de passe
-# On utilise une méthode plus universelle pour créer l'utilisateur
-RUN useradd -u 1001 jpetuser && \
-    chown -R jpetuser:jpetuser /usr/src/myapp
+# SÉCURITÉ : Utilisateur non-privilégié
+RUN useradd -m jpetuser && chown -R jpetuser:jpetuser /usr/src/myapp
 
-# CORRECTION BUILD : Copie explicite
-COPY --chown=jpetuser:jpetuser .mvn/ .mvn/
-COPY --chown=jpetuser:jpetuser mvnw mvnw
-COPY --chown=jpetuser:jpetuser pom.xml pom.xml
-COPY --chown=jpetuser:jpetuser src/ src/
+# CONTINUITÉ : Copie de TOUS les fichiers (y compris .mvn/)
+COPY --chown=jpetuser:jpetuser . .
 
-# SÉCURITÉ : On passe à l'utilisateur non-root
+# Droits d'exécution sur le wrapper
+RUN chmod +x mvnw
+
 USER jpetuser
 
-# Compilation
-RUN ./mvnw clean package
+# Compilation (Le fichier .properties sera maintenant trouvé ici)
+RUN ./mvnw clean package -DskipTests
 
-CMD ./mvnw cargo:run -P tomcat90
+CMD ["./mvnw", "cargo:run", "-P", "tomcat90"]
