@@ -13,44 +13,36 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-# Utilisation de l'image de base (Oracle Linux)
-FROM openjdk:17.0.2
 
-# Passage en ROOT pour installer les outils
-USER root
 
-# INSTALLATION DES OUTILS DE TEST (Version microdnf)
-# microdnf install : équivalent léger de yum/dnf
-# - chromium : le navigateur
-# - chromedriver : le driver pour Selenium
-RUN microdnf update -y && microdnf install -y \
-    chromium \
-    chromedriver \
-    && microdnf clean all
 
-# Définition du répertoire de travail
+# ÉTAPE 1 : Build et Tests (Image complète)
+# On utilise 'maven' qui contient déjà Java et tous les outils de build
+FROM maven:3.8.4-openjdk-17 AS build
+
+# Installation de Chromium pour les tests Selenium (sur Debian)
+RUN apt-get update && apt-get install -y chromium chromium-driver
+
 WORKDIR /usr/src/myapp
+COPY . .
 
-# SÉCURITÉ : Création de l'utilisateur non-privilégié
-# Sur Oracle Linux, on utilise 'useradd'
-RUN useradd -m jpetuser && chown -R jpetuser:jpetuser /usr/src/myapp
-
-# CONTINUITÉ : Copie des fichiers
-COPY --chown=jpetuser:jpetuser . .
-
-# Droits d'exécution sur le script Maven
-RUN chmod +x mvnw
-
-# CONFIGURATION SELENIUM HEADLESS
+# Configuration pour les tests sans interface
 ENV SELENIDE_BROWSER=chrome
 ENV SELENIDE_HEADLESS=true
-# Chemins par défaut pour Oracle Linux
-ENV CHROME_BIN=/usr/bin/chromium-browser
-ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+# Compilation ET exécution des tests (le build échouera si les tests ratent)
+RUN ./mvnw clean package
+
+# ÉTAPE 2 : Image finale (Légère et sécurisée)
+FROM openjdk:17.0.2
+WORKDIR /usr/src/myapp
+
+# SÉCURITÉ : Utilisateur non-privilégié
+RUN useradd -m jpetuser && chown -R jpetuser:jpetuser /usr/src/myapp
+
+# On ne copie QUE le fichier JAR compilé de l'étape 1
+COPY --from=build --chown=jpetuser:jpetuser /usr/src/myapp/target/*.war ./app.war
 
 USER jpetuser
-
-# Compilation
-RUN ./mvnw clean package -DskipTests
-
-CMD ["./mvnw", "cargo:run", "-P", "tomcat90"]
+# On lance directement l'application
+CMD ["java", "-jar", "./app.war"]
