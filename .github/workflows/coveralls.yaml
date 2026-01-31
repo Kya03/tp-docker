@@ -1,0 +1,27 @@
+name: Coveralls with Docker
+
+on: [push, pull_request]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build and Run Coverage in Docker
+        # On crée un conteneur nommé "reporter" pour pouvoir récupérer ses fichiers
+        run: |
+          docker build -t jpetstore-cov .
+          docker run --name reporter jpetstore-cov ./mvnw test jacoco:report
+          
+      - name: Copy Report from Container
+        # On extrait le fichier jacoco.xml du conteneur vers la machine GitHub
+        run: docker cp reporter:/usr/src/myapp/target/site/jacoco/jacoco.xml ./jacoco.xml
+      - name: Send to Coveralls
+        # On utilise l'action officielle pour envoyer le fichier extrait
+        uses: coverallsapp/github-action@v2
+        with:
+          file: ./jacoco.xml
+          github-token: ${{ secrets.GITHUB_TOKEN }}

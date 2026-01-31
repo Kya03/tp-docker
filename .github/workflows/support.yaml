@@ -1,0 +1,26 @@
+name: Container Support (Docker Compose)
+
+on: [push, pull_request]
+
+jobs:
+  check-stack:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Start Services with Docker Compose
+        # Lance l'application en arrière-plan (-d)
+        run: docker compose up -d
+
+      - name: Health Check
+        # On attend que l'application soit prête et on teste l'URL
+        run: |
+          echo "Attente du démarrage complet de Tomcat..."
+          sleep 60  # On passe de 30 à 60 secondes
+          curl --silent --fail http://localhost:8080/jpetstore/ || exit 1
+
+      - name: Stop Services
+        # On nettoie tout après le test
+        run: docker compose down

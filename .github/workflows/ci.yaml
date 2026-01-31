@@ -1,0 +1,20 @@
+name: Java CI with Docker
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest # Docker tourne nativement sur Linux, c'est plus rapide
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3 # On récupère le code source
+
+      - name: Build Docker Image
+        # On construit l'image "jpetstore" à partir du Dockerfile présent
+        run: docker build -t jpetstore .
+
+      - name: Run Tests in Container
+        # On lance un conteneur qui exécute la commande de test Maven à l'intérieur
+        # --rm : supprime le conteneur une fois fini pour gagner de la place
+        run: docker run --rm --user jpetuser jpetstore ./mvnw test -B -D"license.skip=true"
