@@ -2,7 +2,7 @@ name: SonarCloud with Docker
 on:
   push:
     branches:
-      - main  # <--- On cible la branche 
+      - main  # On cible la branche 
 jobs:
   build:
     runs-on: ubuntu-latest
