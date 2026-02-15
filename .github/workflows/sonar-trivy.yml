@@ -53,14 +53,15 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_NGROK_URL }}
+          # On passe le header ici, c'est beaucoup plus stable
+          SONAR_SCANNER_OPTS: "-Dsonar.scanner.httpRequest.headers=ngrok-skip-browser-warning:1"
         with:
           args: >
             -Dsonar.projectKey=JPetStore-Project
             -Dsonar.externalIssuesReportPaths=trivy-report.json
             -Dsonar.scanner.skipScmCheck=true
             -Dsonar.java.binaries=.
-            -Dsonar.scanner.httpRequest.headers={ "ngrok-skip-browser-warning": "1" }
-            
+
       # 6. Résumé visuel
       - name: DevSecOps Summary
         run: |
