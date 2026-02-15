@@ -59,8 +59,8 @@ jobs:
             -Dsonar.externalIssuesReportPaths=trivy-report.json
             -Dsonar.scanner.skipScmCheck=true
             -Dsonar.java.binaries=.
-            -Dsonar.scanner.httpRequest.headers="ngrok-skip-browser-warning: true"
-
+            -Dsonar.scanner.httpRequest.headers={ "ngrok-skip-browser-warning": "1" }
+            
       # 6. Résumé visuel
       - name: DevSecOps Summary
         run: |
