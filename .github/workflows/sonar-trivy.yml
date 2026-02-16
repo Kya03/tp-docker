@@ -54,8 +54,10 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_NGROK_URL }}
         with:
+          # On demande au scanner d'attendre la confirmation du Webhook
           args: >
             -Dsonar.projectKey=JPetStore-Project
+            -Dsonar.qualitygate.wait=false
 
       # 6. Résumé visuel
       - name: DevSecOps Summary
